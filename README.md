@@ -1,70 +1,278 @@
-# Ascii-Art
+# ASCII Art
 
-A command-line program written in Go that turns text into ASCII art banners.
+ASCII Art is a Go command-line program that converts text into large ASCII art letters.
 
-## How It Works
+The program reads banner files and prints the input text using the selected ASCII art style.
 
-The program reads a string from the command line and prints it using one of three banner styles, where each character is drawn as an 8-line-tall block built from a `.txt` font file (`standard.txt`, `shadow.txt`, `thinkertoy.txt`).
+## Project Description
 
-## Usage
+This project takes a string as input and displays it as ASCII art.
+
+Each supported character is stored inside a banner file.
+Each character is represented using 8 lines.
+
+The program reads the correct banner file, finds the ASCII art version of each character, and prints the final result line by line.
+
+## Features
+
+* Converts text into ASCII art
+* Supports different banner styles
+* Handles escaped new lines using `\n`
+* Supports printable ASCII characters
+* Rejects unsupported characters
+* Handles invalid banner names
+* Includes unit tests
+* Uses only the Go standard library
+
+## Supported Banners
+
+The program supports three banner styles:
+
+| Banner     | File             |
+| ---------- | ---------------- |
+| Standard   | `standard.txt`   |
+| Shadow     | `shadow.txt`     |
+| Thinkertoy | `thinkertoy.txt` |
+
+If no banner is selected, the program uses the `standard` banner by default.
+
+## Requirements
+
+To run this project, you need Go installed on your computer.
+
+Check your Go version:
 
 ```bash
-go run . "your text here" [banner]
+go version
 ```
 
-- **`your text here`** — the string to render (required, must be quoted if it contains spaces)
-- **`banner`** — optional banner style: `standard` (default), `shadow`, or `thinkertoy`
+## How to Run
 
-### Examples
+Run the program with:
 
 ```bash
-# Uses the default "standard" banner
 go run . "Hello"
+```
 
-# Uses the "shadow" banner
+This will print `Hello` using the default `standard` banner.
+
+## Choose a Banner
+
+You can choose a banner by adding the banner name after the input.
+
+### Standard
+
+```bash
+go run . "Hello" standard
+```
+
+### Shadow
+
+```bash
 go run . "Hello" shadow
+```
 
-# Uses the "thinkertoy" banner
+### Thinkertoy
+
+```bash
 go run . "Hello" thinkertoy
 ```
 
-### Newlines
+## New Line Support
 
-Use `\n` inside the text to print on multiple lines:
+To print text on more than one line, use `\n` inside the input.
+
+Example:
 
 ```bash
 go run . "Hello\nWorld"
 ```
 
-## Project Structure
+This prints `Hello` first, then prints `World` on a new ASCII art line.
 
-| File | Description |
-|---|---|
-| `main.go` | Program entry point and core logic |
-| `main_test.go` | Unit tests |
-| `standard.txt` | Standard banner font |
-| `shadow.txt` | Shadow banner font |
-| `thinkertoy.txt` | Thinkertoy banner font |
-| `go.mod` | Go module definition |
-
-## Functions
-
-- **`main`** — parses command-line arguments, picks the banner file, and calls `Render`
-- **`LoadBanner(filename string) ([]string, error)`** — reads a banner file and returns its lines
-- **`GetCharLines(lines []string, c rune) []string`** — returns the 8 lines that make up a given character
-- **`RenderLine(banner []string, text string)`** — prints one line of text as ASCII art, row by row
-- **`Render(banner []string, input string)`** — handles `\n`-separated input and calls `RenderLine` for each part
-
-## Requirements
-
-- Go 1.25.6 or later
-
-## Running Tests
+You can also use multiple escaped new lines:
 
 ```bash
-go test ./...
+go run . "Hello\n\nWorld"
 ```
+
+## Examples
+
+### Example 1
+
+Command:
+
+```bash
+go run . "Hello"
+```
+
+Output:
+
+```text
+ _    _          _   _
+| |  | |        | | | |
+| |__| |   ___  | | | |   ___
+|  __  |  / _ \ | | | |  / _ \
+| |  | | |  __/ | | | | | (_) |
+|_|  |_|  \___| |_| |_|  \___/
+```
+
+### Example 2
+
+Command:
+
+```bash
+go run . "Hello" shadow
+```
+
+This prints `Hello` using the shadow banner.
+
+### Example 3
+
+Command:
+
+```bash
+go run . "Hello\nWorld" thinkertoy
+```
+
+This prints two lines using the thinkertoy banner.
+
+## Error Handling
+
+The program handles several error cases.
+
+### Wrong Number of Arguments
+
+If the program is run without input or with too many arguments, it prints:
+
+```text
+Usage: go run . <string> [standard|shadow|thinkertoy]
+```
+
+### Unknown Banner
+
+If the user enters a banner name that is not supported, the program prints an error.
+
+Example:
+
+```bash
+go run . "Hello" random
+```
+
+Output:
+
+```text
+Error: unknown banner
+```
+
+### Unsupported Characters
+
+The program only accepts printable ASCII characters from space to `~`.
+
+It rejects characters such as:
+
+* Real new line characters
+* Arabic letters
+* Accented letters like `é`
+* Emojis
+* Other unprintable characters
+
+Example:
+
+```bash
+go run . "é"
+```
+
+Output:
+
+```text
+Error: unprintable character
+```
+
+## Testing
+
+Run the tests with:
+
+```bash
+go test
+```
+
+Expected result:
+
+```text
+PASS
+```
+
+The tests check:
+
+* Valid input
+* Different banners
+* Empty input
+* Escaped new lines
+* Symbols
+* Numbers
+* Mixed input
+* Invalid characters
+* Missing banner files
+
+## Project Structure
+
+```text
+.
+├── go.mod
+├── main.go
+├── unit_test.go
+├── standard.txt
+├── shadow.txt
+└── thinkertoy.txt
+```
+
+## Files Explanation
+
+### `main.go`
+
+Contains the main program logic.
+
+Main functions:
+
+* `main()`
+  Handles command-line arguments, banner selection, input validation, banner loading, and rendering.
+
+* `ValidateInput()`
+  Checks that the input contains only printable ASCII characters.
+
+* `LoadBanner()`
+  Reads the selected banner file and splits it into lines.
+
+* `GetCharLines()`
+  Gets the 8 ASCII art lines for one character.
+
+* `RenderLine()`
+  Prints one line of text as ASCII art.
+
+* `Render()`
+  Handles the full input, including escaped new lines.
+
+### `unit_test.go`
+
+Contains unit tests for the program.
+
+### `standard.txt`
+
+Contains the standard ASCII art banner.
+
+### `shadow.txt`
+
+Contains the shadow ASCII art banner.
+
+### `thinkertoy.txt`
+
+Contains the thinkertoy ASCII art banner.
+
+### `go.mod`
+
+Defines the Go module.
 
 ## Author
 
-[Demiana Ayad](https://github.com/demianaayad8)
+Created by Demiana Ayad.

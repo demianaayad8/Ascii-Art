@@ -8,6 +8,7 @@ import (
 
 func main() {
 	if len(os.Args) != 2 && len(os.Args) != 3 {
+		fmt.Println("Usage: go run . <string> [standard|shadow|thinkertoy]")
 		return
 	}
 
@@ -28,13 +29,32 @@ func main() {
 		}
 	}
 
+	err := ValidateInput(input)
+	if err != nil {
+		fmt.Println("Error:", err)
+		return
+	}
+
 	lines, err := LoadBanner(bannerFile)
 	if err != nil {
 		fmt.Println("Error:", err)
 		return
 	}
 
-	Render(lines, input)
+	err = Render(lines, input)
+	if err != nil {
+		fmt.Println("Error:", err)
+		return
+	}
+}
+
+func ValidateInput(input string) error {
+	for _, c := range input {
+		if c < 32 || c > 126 {
+			return fmt.Errorf("unprintable character")
+		}
+	}
+	return nil
 }
 
 func LoadBanner(filename string) ([]string, error) {
@@ -44,8 +64,11 @@ func LoadBanner(filename string) ([]string, error) {
 	}
 
 	content := string(data)
-
 	lines := strings.Split(content, "\n")
+
+	if len(lines) < 855 {
+		return nil, fmt.Errorf("invalid banner file: not enough lines")
+	}
 
 	for i := range lines {
 		lines[i] = strings.TrimRight(lines[i], "\r")
@@ -53,55 +76,52 @@ func LoadBanner(filename string) ([]string, error) {
 
 	return lines, nil
 }
-func GetCharLines(lines []string, c rune) []string {
-	if c < 32 || c > 126 {
-		return []string{"", "", "", "", "", "", "", ""}
-	}
 
+func GetCharLines(lines []string, c rune) ([]string, error) {
 	startLine := (int(c)-32)*9 + 1
 
-	return lines[startLine : startLine+8]
+	return lines[startLine : startLine+8], nil
 }
-func RenderLine(banner []string, text string) {
+
+func RenderLine(banner []string, text string) error {
+	var builder strings.Builder
+
 	for row := 0; row < 8; row++ {
-		var builder strings.Builder
+		builder.Reset()
 
 		for _, c := range text {
-			charLines := GetCharLines(banner, c)
+			charLines, err := GetCharLines(banner, c)
+			if err != nil {
+				return err
+			}
+
 			builder.WriteString(charLines[row])
 		}
 
 		fmt.Println(builder.String())
 	}
+
+	return nil
 }
-func Render(banner []string, input string) {
+
+func Render(banner []string, input string) error {
 	if input == "" {
-		return
+		return nil
 	}
 
-	parts := strings.Split(input, "\\n")
+	parts := strings.Split(input, `\n`)
 
-	allEmpty := true
-	for _, part := range parts {
-		if part != "" {
-			allEmpty = false
-			break
-		}
-	}
-
-	if allEmpty {
-		for i := 0; i < len(parts)-1; i++ {
-			fmt.Println()
-		}
-		return
+	if strings.ReplaceAll(input, "\\n", "") == "" {
+		parts = parts[:len(parts)-1]
 	}
 
 	for _, part := range parts {
 		if part == "" {
 			fmt.Println()
-			continue
+		} else if err := RenderLine(banner, part); err != nil {
+			return err
 		}
-
-		RenderLine(banner, part)
 	}
+
+	return nil
 }
